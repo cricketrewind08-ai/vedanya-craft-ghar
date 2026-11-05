@@ -708,3 +708,4 @@ const artifactPath = path.join(
 );
 
 generateOwnerManualPDF(outputPath, artifactPath);
+

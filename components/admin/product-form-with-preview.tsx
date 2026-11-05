@@ -3,8 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Plus, Trash2, Eye, Save, ArrowLeft, Tag, Layers, Clock } from "lucide-react";
-import { saveProductAction } from "@/app/actions/admin";
+import {
+  Plus,
+  Trash2,
+  Eye,
+  Save,
+  ArrowLeft,
+  Tag,
+  Layers,
+  Clock,
+  UploadCloud,
+  Loader2,
+  Link as LinkIcon,
+  Sparkles,
+} from "lucide-react";
+import { saveProductAction, uploadProductImageAction } from "@/app/actions/admin";
 import type { Category } from "@/lib/services/products";
 import type { AvailabilityMode } from "@/lib/types/database";
 import { formatINR } from "@/lib/utils/currency";
@@ -86,6 +99,42 @@ export function ProductFormWithPreview({
         .replace(/^-|-$/g, "");
       setSlug(generatedSlug);
     }
+  };
+
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingFiles(true);
+    setUploadError(null);
+
+    const newUploaded: Array<{ imageUrl: string; isPrimary: boolean }> = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await uploadProductImageAction(formData);
+      if (res.success && res.url) {
+        newUploaded.push({
+          imageUrl: res.url,
+          isPrimary: images.length === 0 && newUploaded.length === 0,
+        });
+      } else {
+        setUploadError(res.error || `Failed to upload ${file.name}`);
+      }
+    }
+
+    if (newUploaded.length > 0) {
+      setImages((prev) => [...prev, ...newUploaded]);
+    }
+
+    setUploadingFiles(false);
+    e.target.value = "";
   };
 
   const addImage = () => {
@@ -363,26 +412,81 @@ export function ProductFormWithPreview({
               </div>
             </div>
 
-            {/* Photo URLs */}
+            {/* Product Photos Section */}
             <div className="space-y-3 pt-3 border-t border-gray-100">
-              <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Product Photos
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  placeholder="Paste image URL (https://...)"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  className="flex-1 px-3 py-2 text-xs rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#B97968]"
-                />
-                <button
-                  type="button"
-                  onClick={addImage}
-                  className="px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg hover:bg-black"
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Product Photos
+                </label>
+                <span className="text-[11px] text-gray-400">
+                  Upload from your device or paste online image link
+                </span>
+              </div>
+
+              {uploadError && (
+                <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
+                  {uploadError}
+                </p>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 1. Upload from Computer / Phone */}
+                <label
+                  className={`flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition ${
+                    uploadingFiles
+                      ? "bg-gray-50 border-gray-300 pointer-events-none"
+                      : "border-[#B97968]/50 hover:border-[#B97968] bg-[#F8F4EC]/50 hover:bg-[#F8F4EC]"
+                  }`}
                 >
-                  Add Image
-                </button>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    multiple
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={uploadingFiles}
+                  />
+                  {uploadingFiles ? (
+                    <div className="flex items-center gap-2 text-xs font-semibold text-[#B97968]">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Uploading photo(s) to cloud...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center text-center">
+                      <UploadCloud className="w-6 h-6 text-[#B97968] mb-1.5" />
+                      <span className="text-xs font-bold text-gray-800">
+                        Upload from Computer / Phone
+                      </span>
+                      <span className="text-[11px] text-gray-500 mt-0.5">
+                        Select single or multiple files (JPG, PNG, WebP)
+                      </span>
+                    </div>
+                  )}
+                </label>
+
+                {/* 2. Paste Web Image Link */}
+                <div className="flex flex-col justify-center p-3.5 border border-gray-200 rounded-xl bg-white space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
+                    <LinkIcon className="w-3.5 h-3.5 text-gray-400" />
+                    <span>Or Paste Image Web Link</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/..."
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#B97968]"
+                    />
+                    <button
+                      type="button"
+                      onClick={addImage}
+                      className="px-3.5 py-1.5 bg-[#453C35] text-white text-xs font-semibold rounded-lg hover:bg-black transition whitespace-nowrap"
+                    >
+                      Add Link
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">

@@ -469,3 +469,41 @@ export async function completeSetupAction(data: {
   }
 }
 
+export async function uploadProductImageAction(formData: FormData) {
+  try {
+    const file = formData.get("file") as File;
+    if (!file) throw new Error("No file provided");
+
+    const supabase = getAdminClient();
+    const ext = file.name.split(".").pop() || "jpg";
+    const cleanFileName = file.name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .toLowerCase();
+    const filePath = `products/${Date.now()}-${cleanFileName}.${ext}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, buffer, {
+        contentType: file.type || "image/jpeg",
+        upsert: true,
+      });
+
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { data: urlData } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(filePath);
+
+    return { success: true, url: urlData.publicUrl };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to upload image",
+    };
+  }
+}
+
