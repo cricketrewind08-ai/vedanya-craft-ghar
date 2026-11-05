@@ -374,7 +374,8 @@ function generateOwnerManualPDF(outputPath, artifactPath) {
       ['Preparation Days', 'Number of days needed (e.g. 2 to 4)', 'Informs buyer: "Handcrafted & dispatched in 3 days".'],
       ['Stock Count', 'How many you have ready (e.g. 5)', 'System warns you when stock drops below threshold.'],
       ['Variants', 'Colors or Sizes (e.g. "Color: Lavender")', 'Each variant can have its own price adjustment (e.g. +₹50).'],
-      ['Photo URLs', 'Paste image web link', 'Supports high-res craft photos. First photo becomes cover.']
+      ['Photos', 'Upload from device/phone or paste URL', 'Choose files directly from your computer/phone or paste an image URL. Automatically stored in Supabase Storage.'],
+      ['Delete Product', 'Red Trash Icon in Products List', 'Click the red Trash icon to permanently remove any product. Safe: will never break completed past orders.']
     ],
     styles: { fontSize: 8, cellPadding: 3, textColor: TEXT_DARK },
     columnStyles: {
@@ -433,7 +434,8 @@ function generateOwnerManualPDF(outputPath, artifactPath) {
       ['Locked / Reserved', 'Units claimed by buyers whose orders you approved, awaiting courier dispatch.', 'Prevents double-selling! If you have 5 scrunchies and 2 are locked, only 3 are available.'],
       ['Available to Sell', 'Total Physical minus Locked.', 'This is the exact quantity displayed to storefront shoppers.'],
       ['Health Status', 'In Stock, Low Stock, or Out of Stock.', 'Amber badges warn you when you have 3 or fewer pieces left so you can make more yarn pieces.'],
-      ['Quick Adjust Button', 'Allows instant count updates with a reason.', 'Click "Adjust", type the new count, and enter a reason (e.g. "Crocheted 4 more pieces"). Recorded in audit log!']
+      ['Quick Adjust Button', 'Allows instant count updates with a reason.', 'Click "Adjust", type the new count, and enter a reason (e.g. "Crocheted 4 more pieces"). Recorded in audit log!'],
+      ['Delete Item (Trash)', 'Remove item or variant permanently', 'Click the red Trash icon to remove an obsolete item or discontinued variant with confirmation. Automatically removes it from the catalog without affecting past orders.']
     ],
     styles: { fontSize: 8.5, cellPadding: 3.5, textColor: TEXT_DARK },
     columnStyles: {
