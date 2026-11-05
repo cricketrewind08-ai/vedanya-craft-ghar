@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F8F4EC;
+  --foreground: #453C35;
+  --card: #E9DCCB;
+  --card-foreground: #453C35;
+  --primary: #B97968;
+  --primary-foreground: #FFFFFF;
+  --secondary: #A3AA8C;
+  --secondary-foreground: #FFFFFF;
+  --muted: #E2D7C8;
+  --muted-foreground: #7D726A;
+  --accent: #B97968;
+  --accent-foreground: #FFFFFF;
+  --destructive: #B33927;
+  --destructive-foreground: #FFFFFF;
+  --border: #D8CCBE;
+  --input: #E2D7C8;
+  --ring: #B97968;
+  --radius: 0.5rem;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+/* Custom Scrollbar for warm artisanal boutique feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F8F4EC;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D8CCBE;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B97968;
+}
+
