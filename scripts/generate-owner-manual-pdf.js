@@ -163,7 +163,7 @@ function generateOwnerManualPDF(outputPath, artifactPath) {
     headStyles: { fillColor: ESPRESSO, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
     body: [
       ['Customer Storefront', 'https://your-domain.vercel.app\n(Public boutique for all buyers)', 'Open to all public visitors'],
-      ['Owner Management Console', 'https://your-domain.vercel.app/admin\n(Private workspace for owner)', 'Email: artisan@vedanyacraft.in\n(or hemachndaard@gmail.com)\nPassword: VedanyaOwner2026!'],
+      ['Owner Management Console', 'https://your-domain.vercel.app/admin\n(Private workspace for owner)', 'Username: jigishaowner@2026\nPassword: jigishaowner@2026\n\nAlso: artisan@vedanyacraft.in\nPassword: VedanyaOwner2026!'],
       ['Quick 1-Click Access', 'On the admin login screen', 'Click "Enter Owner Console as\nAuthenticated Store Owner"'],
       ['Local Offline Server', 'http://localhost:3000\n(When testing locally on laptop)', 'Terminal command:\nnpm run start (or npm run dev)'],
       ['Database & Cloud Backend', 'https://supabase.com/dashboard\n(Project: ykbaksjevsscpcahiswm)', 'Managed 24/7 cloud database;\nRuns even when laptop is OFF'],

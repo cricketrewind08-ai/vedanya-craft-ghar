@@ -8,7 +8,10 @@
 
 1. In your web browser, go to your website address followed by `/admin`:
    `https://your-domain.com/admin` (or `http://localhost:3000/admin` locally).
-2. Enter your email and password, or click **"Enter Owner Console as Authenticated Store Owner"** to jump straight into your dashboard.
+2. Enter your credentials:
+   - **Username / Email:** `jigishaowner@2026` *(or `artisan@vedanyacraft.in`)*
+   - **Password:** `jigishaowner@2026` *(or `VedanyaOwner2026!`)*
+   - Or simply click **"Enter Owner Console as Authenticated Store Owner"** to jump straight in with 1 click!
 
 ---
 
