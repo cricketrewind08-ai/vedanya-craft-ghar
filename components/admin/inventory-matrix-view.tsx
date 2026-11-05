@@ -12,8 +12,9 @@ import {
   Loader2,
   PackageCheck,
   Search,
+  Trash2,
 } from "lucide-react";
-import { updateInventoryAction } from "@/app/actions/admin";
+import { updateInventoryAction, deleteInventoryItemAction } from "@/app/actions/admin";
 import type { ProductWithDetails } from "@/lib/services/admin-products";
 import type { Database } from "@/lib/types/database";
 
@@ -25,6 +26,7 @@ interface InventoryMatrixViewProps {
 }
 
 export function InventoryMatrixView({ products, adjustments }: InventoryMatrixViewProps) {
+  const [productList, setProductList] = useState(products);
   const [search, setSearch] = useState("");
   const [selectedItem, setSelectedItem] = useState<{
     productId: string;
@@ -37,6 +39,7 @@ export function InventoryMatrixView({ products, adjustments }: InventoryMatrixVi
   const [newStock, setNewStock] = useState<number>(0);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
   // Flatten products and variants into inventory rows
@@ -52,7 +55,7 @@ export function InventoryMatrixView({ products, adjustments }: InventoryMatrixVi
     isVariant: boolean;
   }> = [];
 
-  for (const p of products) {
+  for (const p of productList) {
     const primaryImg = p.images.find((i) => i.is_primary)?.image_url || p.images[0]?.image_url;
 
     if (p.variants.length > 0) {
@@ -120,6 +123,40 @@ export function InventoryMatrixView({ products, adjustments }: InventoryMatrixVi
       window.location.reload();
     } else {
       alert(res.error || "Failed to update inventory");
+    }
+  };
+
+  const handleDeleteItem = async (row: (typeof inventoryRows)[0]) => {
+    const itemKey = row.variantId || row.productId;
+    if (
+      !confirm(
+        `Are you sure you want to permanently delete "${row.title}" from inventory? This will remove it from the product catalog.`
+      )
+    ) {
+      return;
+    }
+
+    setDeletingKey(itemKey);
+    const res = await deleteInventoryItemAction({
+      productId: row.productId,
+      variantId: row.variantId,
+    });
+    setDeletingKey(null);
+
+    if (res.success) {
+      if (row.variantId) {
+        setProductList((prev) =>
+          prev.map((p) =>
+            p.id === row.productId
+              ? { ...p, variants: p.variants.filter((v) => v.id !== row.variantId) }
+              : p
+          )
+        );
+      } else {
+        setProductList((prev) => prev.filter((p) => p.id !== row.productId));
+      }
+    } else {
+      alert(res.error || "Failed to delete inventory item");
     }
   };
 
@@ -278,13 +315,14 @@ export function InventoryMatrixView({ products, adjustments }: InventoryMatrixVi
                 <th className="py-3 px-4 text-center">Locked / Reserved</th>
                 <th className="py-3 px-4 text-center">Available to Sell</th>
                 <th className="py-3 px-4">Health Status</th>
-                <th className="py-3 px-4 text-right">Quick Adjust</th>
+                <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredRows.map((r, idx) => {
                 const isOutOfStock = r.available <= 0;
                 const isLowStock = r.available > 0 && r.available <= 3;
+                const itemKey = r.variantId || r.productId;
 
                 return (
                   <tr key={idx} className="hover:bg-gray-50 transition">
@@ -339,12 +377,26 @@ export function InventoryMatrixView({ products, adjustments }: InventoryMatrixVi
                     </td>
 
                     <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => openAdjuster(r)}
-                        className="px-2.5 py-1 text-xs border border-gray-200 hover:border-[#B97968] rounded-lg text-gray-700 hover:text-[#B97968] transition"
-                      >
-                        Adjust
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openAdjuster(r)}
+                          className="px-2.5 py-1 text-xs border border-gray-200 hover:border-[#B97968] rounded-lg text-gray-700 hover:text-[#B97968] transition"
+                        >
+                          Adjust
+                        </button>
+                        <button
+                          onClick={() => handleDeleteItem(r)}
+                          disabled={deletingKey === itemKey}
+                          title="Delete from inventory"
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+                        >
+                          {deletingKey === itemKey ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

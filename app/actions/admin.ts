@@ -507,3 +507,43 @@ export async function uploadProductImageAction(formData: FormData) {
   }
 }
 
+export async function deleteInventoryItemAction(input: {
+  productId: string;
+  variantId?: string | null;
+}) {
+  try {
+    const supabase = getAdminClient();
+
+    if (input.variantId) {
+      // Delete variant
+      const { error } = await supabase
+        .from("product_variants")
+        .delete()
+        .eq("id", input.variantId);
+      if (error) throw new Error(error.message);
+    } else {
+      // Delete product (cascades to images and variants)
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", input.productId);
+      if (error) throw new Error(error.message);
+    }
+
+    revalidatePath("/admin/inventory");
+    revalidatePath("/admin/products");
+    revalidatePath("/shop");
+    revalidatePath("/");
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Failed to delete item",
+    };
+  }
+}
+
+export async function deleteProductAction(productId: string) {
+  return deleteInventoryItemAction({ productId });
+}
+

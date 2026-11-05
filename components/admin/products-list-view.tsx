@@ -15,7 +15,11 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
-import { toggleArchiveProductAction, purgeDemoDataAction } from "@/app/actions/admin";
+import {
+  toggleArchiveProductAction,
+  purgeDemoDataAction,
+  deleteProductAction,
+} from "@/app/actions/admin";
 import type { ProductWithDetails } from "@/lib/services/admin-products";
 
 interface ProductsListViewProps {
@@ -74,6 +78,26 @@ export function ProductsListView({ initialProducts }: ProductsListViewProps) {
       alert("Demo data successfully purged!");
     } else {
       alert(res.error || "Failed to purge demo data");
+    }
+  };
+
+  const handleDeleteProduct = async (id: string, title: string) => {
+    if (
+      !confirm(
+        `Are you sure you want to permanently delete "${title}"? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setBusyId(id);
+    const res = await deleteProductAction(id);
+    setBusyId(null);
+
+    if (res.success) {
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    } else {
+      alert(res.error || "Failed to delete product");
     }
   };
 
@@ -302,6 +326,19 @@ export function ProductsListView({ initialProducts }: ProductsListViewProps) {
                               <ArchiveRestore className="w-3.5 h-3.5 text-green-600" />
                             ) : (
                               <Archive className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteProduct(p.id, p.title)}
+                            disabled={busyId === p.id}
+                            title="Delete product permanently"
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+                          >
+                            {busyId === p.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
                             )}
                           </button>
                         </div>
