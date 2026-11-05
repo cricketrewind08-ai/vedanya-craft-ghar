@@ -357,7 +357,7 @@ export function ProductFormWithPreview({
                   type="text"
                   value={dimensions}
                   onChange={(e) => setDimensions(e.target.value)}
-                  placeholder="e.g. 14\" x 15\" with 10\" strap"
+                  placeholder={'e.g. 14" x 15" with 10" strap'}
                   className="w-full px-3.5 py-2 text-xs rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#B97968]"
                 />
               </div>

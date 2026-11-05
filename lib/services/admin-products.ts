@@ -37,28 +37,96 @@ export interface ProductFormData {
   }>;
 }
 
+export interface ProductWithDetails extends Product {
+  category: Database["public"]["Tables"]["categories"]["Row"] | null;
+  images: ProductImage[];
+  variants: ProductVariant[];
+}
+
 /**
  * Fetches all products including archived ones for the owner manager.
  */
-export async function getAdminProductsList() {
+export async function getAdminProductsList(): Promise<ProductWithDetails[]> {
   try {
     const supabase = getAdminClient();
     const { data: products, error } = await supabase
       .from("products")
-      .select(`
-        *,
-        category:categories(*),
-        images:product_images(*),
-        variants:product_variants(*)
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
-    if (error || !products) return [];
+    if (error || !products || products.length === 0) return [];
 
-    return products;
+    const productIds = products.map((p) => p.id);
+    const categoryIds = Array.from(new Set(products.map((p) => p.category_id).filter(Boolean))) as string[];
+
+    const [{ data: categories }, { data: images }, { data: variants }] = await Promise.all([
+      categoryIds.length > 0
+        ? supabase.from("categories").select("*").in("id", categoryIds)
+        : Promise.resolve({ data: [] }),
+      supabase.from("product_images").select("*").in("product_id", productIds).order("display_order", { ascending: true }),
+      supabase.from("product_variants").select("*").in("product_id", productIds),
+    ]);
+
+    const catMap = (categories || []).reduce((acc, c) => {
+      acc[c.id] = c;
+      return acc;
+    }, {} as Record<string, Database["public"]["Tables"]["categories"]["Row"]>);
+
+    const imgMap = (images || []).reduce((acc, img) => {
+      acc[img.product_id] = acc[img.product_id] || [];
+      acc[img.product_id].push(img);
+      return acc;
+    }, {} as Record<string, ProductImage[]>);
+
+    const varMap = (variants || []).reduce((acc, v) => {
+      acc[v.product_id] = acc[v.product_id] || [];
+      acc[v.product_id].push(v);
+      return acc;
+    }, {} as Record<string, ProductVariant[]>);
+
+    return products.map((p) => ({
+      ...p,
+      category: p.category_id ? catMap[p.category_id] || null : null,
+      images: imgMap[p.id] || [],
+      variants: varMap[p.id] || [],
+    }));
   } catch (err) {
     console.error("Error fetching admin products list:", err);
     return [];
+  }
+}
+
+/**
+ * Fetches a single product by ID with full images and variants.
+ */
+export async function getAdminProductById(productId: string): Promise<ProductWithDetails | null> {
+  try {
+    const supabase = getAdminClient();
+    const { data: product, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("id", productId)
+      .single();
+
+    if (error || !product) return null;
+
+    const [{ data: category }, { data: images }, { data: variants }] = await Promise.all([
+      product.category_id
+        ? supabase.from("categories").select("*").eq("id", product.category_id).single()
+        : Promise.resolve({ data: null }),
+      supabase.from("product_images").select("*").eq("product_id", product.id).order("display_order", { ascending: true }),
+      supabase.from("product_variants").select("*").eq("product_id", product.id),
+    ]);
+
+    return {
+      ...product,
+      category: category || null,
+      images: images || [],
+      variants: variants || [],
+    };
+  } catch (err) {
+    console.error("Error fetching admin product by ID:", err);
+    return null;
   }
 }
 
